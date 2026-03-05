@@ -45,14 +45,3 @@ def registrar_victoria_excel(nombre_ganador):
             row[6].fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
             break
     wb.save(ARCHIVO)
-
-def obtener_resumen_pokedex():
-    if not os.path.exists(ARCHIVO): return {}
-    wb = load_workbook(ARCHIVO)
-    ws = wb.active
-    resumen = {}
-    for row in ws.iter_rows(min_row=2, values_only=True):
-        if row[2]:
-            tipo = row[2].split(",")[0].strip()
-            resumen[tipo] = resumen.get(tipo, 0) + 1
-    return resumen
