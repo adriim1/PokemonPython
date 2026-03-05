@@ -23,10 +23,8 @@ class Pokemon:
         ataque = self.stats.get('attack', 0)
         defensa_rival = oponente.stats.get('defense', 0)
         danio = max(5, poder + int(ataque * 0.5) - int(defensa_rival * 0.3))
-        
-        print(f"{self.nombre} usa {mov['name']}!")
         oponente.recibir_danio(danio)
-        print(f"-> {oponente.nombre} pierde {danio} HP. (Quedan: {oponente.hp_actual})")
+        return danio
 
 def obtener_datos_pokemon(nombre_pkm):
     url = f"https://pokeapi.co/api/v2/pokemon/{nombre_pkm.lower().strip()}"
@@ -34,7 +32,6 @@ def obtener_datos_pokemon(nombre_pkm):
         res = requests.get(url, timeout=10)
         res.raise_for_status()
         datos = res.json()
-        
         stats = {s["stat"]["name"]: s["base_stat"] for s in datos["stats"]}
         tipos = ", ".join([t["type"]["name"] for t in datos["types"]])
         
@@ -45,44 +42,27 @@ def obtener_datos_pokemon(nombre_pkm):
                 movs.append({"name": m["move"]["name"], "power": m_info.get("power")})
             except:
                 movs.append({"name": m["move"]["name"], "power": 40})
-            
-        return Pokemon(
-            id=datos["id"], 
-            nombre=datos["name"], 
-            tipos=tipos, 
-            stats=stats, 
-            movimientos=movs, 
-            species_url=datos["species"]["url"],
-            imagen_url=datos["sprites"]["front_default"]
-        )
+        
+        return Pokemon(datos["id"], datos["name"], tipos, stats, movs, datos["species"]["url"], datos["sprites"]["front_default"])
     except Exception as e:
-        raise Exception(f"No se pudo encontrar al Pokemon: {e}")
+        raise Exception(f"No encontrado: {e}")
 
 def descargar_imagen(pokemon):
-    if not os.path.exists("imagenes"):
-        os.makedirs("imagenes")
+    if not os.path.exists("imagenes"): os.makedirs("imagenes")
     try:
         img_res = requests.get(pokemon.imagen_url, timeout=10)
-        ruta = f"imagenes/{pokemon.nombre}.png"
-        with open(ruta, 'wb') as f:
+        with open(f"imagenes/{pokemon.nombre}.png", 'wb') as f:
             f.write(img_res.content)
         return True
-    except:
-        return False
+    except: return False
 
 def buscar_evolucion(pokemon_actual):
     try:
         res_species = requests.get(pokemon_actual.species_url, timeout=10).json()
-        chain_url = res_species["evolution_chain"]["url"]
-        chain = requests.get(chain_url, timeout=10).json()["chain"]
-        
+        chain = requests.get(res_species["evolution_chain"]["url"], timeout=10).json()["chain"]
         while chain and chain["species"]["name"] != pokemon_actual.nombre.lower():
-            if chain["evolves_to"]:
-                chain = chain["evolves_to"][0]
-            else:
-                return None
+            chain = chain["evolves_to"][0] if chain["evolves_to"] else None
         if chain and chain["evolves_to"]:
             return obtener_datos_pokemon(chain["evolves_to"][0]["species"]["name"])
-    except:
-        pass
+    except: pass
     return None

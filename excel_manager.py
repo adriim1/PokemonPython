@@ -19,8 +19,15 @@ def guardar_pokemon_excel(pokemon, estado="Registrado"):
     wb = load_workbook(ARCHIVO)
     ws = wb.active
     poder_total = sum(pokemon.stats.values())
-    ws.append([pokemon.id, pokemon.nombre, pokemon.tipos, pokemon.hp_max, poder_total, datetime.now().strftime("%d/%m/%Y %H:%M"), estado])
-    
+    ws.append([
+        pokemon.id, 
+        pokemon.nombre, 
+        pokemon.tipos, 
+        pokemon.hp_max, 
+        poder_total, 
+        datetime.now().strftime("%d/%m/%Y %H:%M"), 
+        estado
+    ])
     celda_nombre = ws.cell(row=ws.max_row, column=2)
     ruta_img = f"imagenes/{pokemon.nombre}.png"
     if os.path.exists(ruta_img):
@@ -29,6 +36,7 @@ def guardar_pokemon_excel(pokemon, estado="Registrado"):
     wb.save(ARCHIVO)
 
 def registrar_victoria_excel(nombre_ganador):
+    if not os.path.exists(ARCHIVO): return
     wb = load_workbook(ARCHIVO)
     ws = wb.active
     for row in reversed(list(ws.iter_rows(min_row=2))):
